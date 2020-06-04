@@ -49,11 +49,10 @@ function subscribeToChanges(characteristic) {
 // handle incoming data:
 function handleData(event) {
   // get the data buffer from the meter:
-  var buf = new Uint8Array(event.target.value);
+  //var buf = new Uint8Array(event.target.value.buffer.getFloat32);
+  var buf = new Int32Array(event.target.value.buffer);
 
-  console.log(event.target.value);
-
-
+  console.log(buf);
 
   //var x = event.target.value.getFloat32(0,true); 
   //var y = event.target.value.getFloat32(4,true);
