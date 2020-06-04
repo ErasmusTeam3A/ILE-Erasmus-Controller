@@ -16,7 +16,6 @@ function connect(){
   .then(function(device) {
     // save the device returned so you can disconnect later:
     myDevice = device;
-    console.log(device);
     // connect to the device once you find it:
     return device.gatt.connect();
   })
@@ -33,6 +32,7 @@ function connect(){
     for (c in characteristics) {
       characteristics[c].startNotifications()
       .then(subscribeToChanges);
+      //characteristics[c].addEventListener('characteristicvaluechanged', handleData)
     }
   })
   .catch(function(error) {
@@ -50,7 +50,19 @@ function subscribeToChanges(characteristic) {
 function handleData(event) {
   // get the data buffer from the meter:
   var buf = new Uint8Array(event.target.value);
-  console.log(buf);
+
+  console.log(event.target.value);
+
+
+
+  //var x = event.target.value.getFloat32(0,true); 
+  //var y = event.target.value.getFloat32(4,true);
+  //var z = event.target.value.getFloat32(8,true);
+
+  //console.log(x);
+  //console.log(y);
+  //console.log(z);
+
 }
 
 // disconnect function:

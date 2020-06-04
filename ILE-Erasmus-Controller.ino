@@ -83,10 +83,10 @@ eulers[2] = Wire.read()<<8 | Wire.read(); // reading registers: 0x47 (GYRO_ZOUT_
 
 // Send 3x eulers over bluetooth as 1x byte array 
 imuCharacteristic.setValue((byte *) &eulers, 12); 
-
-      Serial.print("gX = "); Serial.print(convert_int16_to_str(eulers[0]));
-      Serial.print("  gY = "); Serial.print(convert_int16_to_str(eulers[1]));
-      Serial.print("  gZ = "); Serial.print(convert_int16_to_str(eulers[2]));
+    
+      Serial.print("gX = "); Serial.print(eulers[0]);
+      Serial.print("  gY = "); Serial.print(eulers[1]);
+      Serial.print("  gZ = "); Serial.print(eulers[2]);
 
 } 
 
