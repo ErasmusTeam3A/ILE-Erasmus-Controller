@@ -4,7 +4,7 @@
 BLEService imuService("0000ffb0-0000-1000-8000-00805f9b34fb"); // BLE LED Service
 
 // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
-BLECharacteristic imuCharacteristic("0000ffb0-0000-1000-8000-00805f9b34fb", BLERead | BLENotify, 12);
+BLECharacteristic imuCharacteristic("00002AB3-0000-1000-8000-00805f9b34fb", BLERead | BLENotify, 12);
 
 long previousMillis = 0;  // last timechecked, in ms
 
@@ -65,6 +65,7 @@ void setup() {
 void sendSensorData() {
 float eulers[3];
 
+
 Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
   Wire.endTransmission(false); // the parameter indicates that the Arduino will send a restart. As a result, the connection is kept active.
@@ -75,6 +76,10 @@ Wire.beginTransmission(MPU_ADDR);
 eulers[0] = Wire.read()<<8 | Wire.read(); // reading registers: 0x43 (GYRO_XOUT_H) and 0x44 (GYRO_XOUT_L)
 eulers[1] = Wire.read()<<8 | Wire.read(); // reading registers: 0x45 (GYRO_YOUT_H) and 0x46 (GYRO_YOUT_L)
 eulers[2] = Wire.read()<<8 | Wire.read(); // reading registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
+
+//eulers[0] = convert_int16_to_str(data[0]);
+//eulers[1] = convert_int16_to_str(data[1]);
+//eulers[2] = convert_int16_to_str(data[2]);
 
 // Send 3x eulers over bluetooth as 1x byte array 
 imuCharacteristic.setValue((byte *) &eulers, 12); 
@@ -101,10 +106,7 @@ void loop() {
     // while the central is connected:
     while (central.connected()) {
       long currentMillis = millis();
-
-
       
-
       if (currentMillis - previousMillis >= 50) {
 //          if (IMU.accelerationAvailable()) { // XX
 //        previousMillis = currentMillis;
