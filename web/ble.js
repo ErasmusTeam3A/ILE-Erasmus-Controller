@@ -49,14 +49,44 @@ function subscribeToChanges(characteristic) {
 // handle incoming data:
 function handleData(event) {
   // get the data buffer from the meter:
-  //var buf = new Uint8Array(event.target.value.buffer.getFloat32);
-  var buf = new Int32Array(event.target.value.buffer);
+  //var buf = new Uint8Array(event.target.value.buffer);
+  //var buf = new Int32Array(event.target.value);
 
-  console.log(buf);
+  //var dataview = new DataView(new Int32Array(event.target.value.buffer));
 
-  //var x = event.target.value.getFloat32(0,true); 
-  //var y = event.target.value.getFloat32(4,true);
-  //var z = event.target.value.getFloat32(8,true);
+  //let buffer = event.target.value.buffer;
+
+  //let buf = new ArrayBuffer(event);
+
+  //var buf = new Uint8Array(event.target.value);
+
+  const x = event.target.value.getFloat32(0,true); 
+  const y = event.target.value.getFloat32(4,true);
+  const z = event.target.value.getFloat32(8,true);
+
+  console.log(x);
+  console.log(y);
+  console.log(z);
+
+  //const buf = new Int32Array(event);
+
+   // buf.map(function(test){
+   //     //let parseInt = parseInt( test.split('').reverse().join(''), 2 );
+   //    //let testie = [0, 1, 2, 3, 4];
+   //     let parseInt = parseInt(testie.split('').reverse().join(''), 2 );
+   //     console.log(parseInt);
+   // })
+
+
+  //var x = buf.getFloat32(0,true); 
+  //var y = buf.getFloat32(4,true);
+  //var z = buf.getFloat32(8,true);
+
+  //console.log(buf);
+  //console.log(x);
+  //console.log(y);
+  //console.log(z);
+
 
   //console.log(x);
   //console.log(y);

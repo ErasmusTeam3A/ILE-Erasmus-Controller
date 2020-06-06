@@ -88,11 +88,10 @@ Wire.beginTransmission(MPU_ADDR);
 imuCharacteristic.setValue((byte *) &eulers, 12); 
     
       Serial.print("gX = "); Serial.print(eulers[0]);
-      Serial.print("  gY = "); Serial.print(eulers[1]);
-      Serial.print("  gZ = "); Serial.print(eulers[2]);
+      Serial.print("  gY = "); Serial.print(convert_int16_to_str(eulers[1]));
+      Serial.print("  gZ = "); Serial.print(convert_int16_to_str(eulers[2]));
 
 } 
-
 
 void loop() {
   // wait for a BLE central
