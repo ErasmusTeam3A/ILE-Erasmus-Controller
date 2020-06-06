@@ -136,7 +136,7 @@ void loop() {
     while (central.connected()) {
       long currentMillis = millis();
       
-      if (currentMillis - previousMillis >= 50) {
+      if (currentMillis - previousMillis >= 20) {
 //          if (IMU.accelerationAvailable()) { // XX
 //        previousMillis = currentMillis;
           sendSensorData();
