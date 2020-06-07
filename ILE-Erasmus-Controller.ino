@@ -17,11 +17,29 @@ const int ledPin = LED_BUILTIN; // pin to use for the LED
 // int16_t gyro_x, gyro_y, gyro_z; // variables for gyro raw data
 // int16_t temperature; // variables for temperature data
 
-const int MPU_addr=0x68;
-int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
+//Direccion I2C de la IMU
+#define MPU 0x68
+ 
+//Ratios de conversion
+#define A_R 16384.0 // 32768/2
+#define G_R 131.0 // 32768/250
+ 
+//Conversion de radianes a grados 180/PI
+#define RAD_A_DEG = 57.295779
 
-int minVal=265;
-int maxVal=402;
+//MPU-6050 da los valores en enteros de 16 bits
+//Valores RAW
+int16_t AcX, AcY, AcZ, GyX, GyY, GyZ;
+ 
+//Angulos
+float Acc[2];
+float Gy[3];
+float Angle[3];
+
+String valores;
+
+long tiempo_prev;
+float dt;
 
 // char tmp_str[7]; // temporary variable used in convert function
 
@@ -35,7 +53,7 @@ int maxVal=402;
 void setup() {
   //START WIRE.H
   Wire.begin();
-  Wire.beginTransmission(MPU_addr);
+  Wire.beginTransmission(MPU);
   Wire.write(0x6B);
   Wire.write(0);
   Wire.endTransmission(true);
@@ -63,60 +81,55 @@ void setup() {
 
   Serial.println("BLE started");
 
-//END LED BLE
-
-// //START WIRE.H
-//   Wire.begin();
-//   Wire.beginTransmission(MPU_ADDR); // Begins a transmission to the I2C slave (GY-521 board)
-//   Wire.write(0x6B); // PWR_MGMT_1 register
-//   Wire.write(0); // set to zero (wakes up the MPU-6050)
-//   Wire.endTransmission(true);
 }
 
 //SENSOR DATA FUNCTIE
 void sendSensorData() {
-float eulers[3];
 
-Wire.beginTransmission(MPU_addr);
-  Wire.write(0x3B);
+Wire.beginTransmission(MPU);
+  Wire.write(0x3B); //Pedir el registro 0x3B - corresponde al AcX
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU_addr,14,true);
-  AcX=Wire.read()<<8|Wire.read();
+  Wire.requestFrom(MPU,6,true);   //A partir del 0x3B, se piden 6 registros
+  AcX=Wire.read()<<8|Wire.read(); //Cada valor ocupa 2 registros
   AcY=Wire.read()<<8|Wire.read();
   AcZ=Wire.read()<<8|Wire.read();
-    int xAng = map(AcX,minVal,maxVal,-90,90);
-    int yAng = map(AcY,minVal,maxVal,-90,90);
-    int zAng = map(AcZ,minVal,maxVal,-90,90);
+ 
+  //Y-, X-hoeken worden berekend op basis van de waarden van de versnellingsmeter
+  //respectievelijk met de tangensformule.
+  Acc[1] = atan(-1*(AcX/A_R)/sqrt(pow((AcY/A_R),2) + pow((AcZ/A_R),2)))*RAD_TO_DEG;
+  Acc[0] = atan((AcY/A_R)/sqrt(pow((AcX/A_R),2) + pow((AcZ/A_R),2)))*RAD_TO_DEG;
+ 
+  //Lees de Gyroscoop-waarden
+  Wire.beginTransmission(MPU);
+  Wire.write(0x43);
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPU,6,true);   //Vanaf 0x43 worden 6 registraties aangevraagd
+  GyX=Wire.read()<<8|Wire.read(); //Elke waarde beslaat 2 registers
+  GyY=Wire.read()<<8|Wire.read();
+  GyZ=Wire.read()<<8|Wire.read();
+ 
+  // Bereken de hoek van de gyroscoop
+  Gy[0] = GyX/G_R;
+  Gy[1] = GyY/G_R;
+  Gy[2] = GyZ/G_R;
+    
+  dt = (millis() - tiempo_prev) / 1000.0;
+  tiempo_prev = millis();
+    
+  //Pas het complementaire filter toe
+  Angle[0] = 0.98 *(Angle[0]+Gy[0]*dt) + 0.02*Acc[0];
+  Angle[1] = 0.98 *(Angle[1]+Gy[1]*dt) + 0.02*Acc[1]; 
 
-       eulers[0] = RAD_TO_DEG * (atan2(-yAng, -zAng)+PI);
-       eulers[1] = RAD_TO_DEG * (atan2(-xAng, -zAng)+PI);
-       eulers[2] = RAD_TO_DEG * (atan2(-yAng, -xAng)+PI);
+  //Integratie met betrekking tot tijd om de YAW te berekenen
+  Angle[2] = Angle[2]+Gy[2]*dt;
 
-
-// Wire.beginTransmission(MPU_ADDR);
-//   Wire.write(0x3B); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
-//   Wire.endTransmission(false); // the parameter indicates that the Arduino will send a restart. As a result, the connection is kept active.
-//   Wire.requestFrom(MPU_ADDR, 7*2, true); // request a total of 7*2=14 registers
-// // read orientation x, y and z eulers
-// //IMU.readEulerAngles(eulers[0], eulers[1], eulers[2]); 
-// //  accelerometer_x = Wire.read()<<8 | Wire.read(); // reading registers: 0x3B (ACCEL_XOUT_H) and 0x3C (ACCEL_XOUT_L)
-// //  accelerometer_y = Wire.read()<<8 | Wire.read(); // reading registers: 0x3D (ACCEL_YOUT_H) and 0x3E (ACCEL_YOUT_L)
-// //  accelerometer_z = Wire.read()<<8 | Wire.read(); // reading registers: 0x3F (ACCEL_ZOUT_H) and 0x40 (ACCEL_ZOUT_L)
-// //  temperature = Wire.read()<<8 | Wire.read(); // reading registers: 0x41 (TEMP_OUT_H) and 0x42 (TEMP_OUT_L)
-//   eulers[0] = Wire.read()<<8 | Wire.read(); // reading registers: 0x43 (GYRO_XOUT_H) and 0x44 (GYRO_XOUT_L)
-//   eulers[1] = Wire.read()<<8 | Wire.read(); // reading registers: 0x45 (GYRO_YOUT_H) and 0x46 (GYRO_YOUT_L)
-//   eulers[2] = Wire.read()<<8 | Wire.read(); // reading registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
-
-// //eulers[0] = convert_int16_to_str(data[0]);
-// //eulers[1] = convert_int16_to_str(data[1]);
-// //eulers[2] = convert_int16_to_str(data[2]);
 
 // Send 3x eulers over bluetooth as 1x byte array 
-imuCharacteristic.setValue((byte *) &eulers, 12); 
+imuCharacteristic.setValue((byte *) &Angle, 12); 
     
-      Serial.print("gX = "); Serial.print(eulers[0]);
-      Serial.print("  gY = "); Serial.print(eulers[1]);
-      Serial.print("  gZ = "); Serial.print(eulers[2]);
+      Serial.print("gX = "); Serial.print(Angle[0]);
+      Serial.print("  gY = "); Serial.print(Angle[1]);
+      Serial.print("  gZ = "); Serial.print(Angle[2]);
 
 } 
 
@@ -136,10 +149,11 @@ void loop() {
     while (central.connected()) {
       long currentMillis = millis();
       
-      if (currentMillis - previousMillis >= 20) {
+      if (currentMillis - previousMillis >= 50) {
 //          if (IMU.accelerationAvailable()) { // XX
 //        previousMillis = currentMillis;
           sendSensorData();
+          // delay(1000);
                     
           Serial.println();
 
