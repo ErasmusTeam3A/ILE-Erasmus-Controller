@@ -64,9 +64,9 @@ function handleData(event) {
   const y = event.target.value.getFloat32(4,true);
   const z = event.target.value.getFloat32(8,true);
 
-  console.log(x);
-  console.log(y);
-  console.log(z);
+  console.log(`x = ${x} y = ${y} z = ${z}`);
+  // console.log(y);
+  // console.log(z);
 
   //const buf = new Int32Array(event);
 
