@@ -11,24 +11,18 @@ long previousMillis = 0;  // last timechecked, in ms
 const int ledPin = LED_BUILTIN; // pin to use for the LED
 
 //VARIABLES FOR EMU SENSOR
-// const int MPU_ADDR = 0x68; // I2C address of the MPU-6050. If AD0 pin is set to HIGH, the I2C address will be 0x69.
 
-// int16_t accelerometer_x, accelerometer_y, accelerometer_z; // variables for accelerometer raw data
-// int16_t gyro_x, gyro_y, gyro_z; // variables for gyro raw data
-// int16_t temperature; // variables for temperature data
-
-//Direccion I2C de la IMU
+//define I2C channel
 #define MPU 0x68
  
-//Ratios de conversion
+//conversion ratios
 #define A_R 16384.0 // 32768/2
 #define G_R 131.0 // 32768/250
  
-//Conversion de radianes a grados 180/PI
+//conversion of radians to degrees 180 / PI
 #define RAD_A_DEG = 57.295779
 
-//MPU-6050 da los valores en enteros de 16 bits
-//Valores RAW
+
 int16_t AcX, AcY, AcZ, GyX, GyY, GyZ;
  
 //Angulos
@@ -36,29 +30,18 @@ float Acc[2];
 float Gy[3];
 float Angle[3];
 
-String valores;
-
-long tiempo_prev;
+long pre_time;
 float dt;
-
-// char tmp_str[7]; // temporary variable used in convert function
-
-// char* convert_int16_to_str(int16_t i) { // converts int16 to string. Moreover, resulting strings will have the same length in the debug monitor.
-//   sprintf(tmp_str, "%6d", i);
-//   return tmp_str;
-// }
-//END VARIABLES
   
-//START LED BLE
+
 void setup() {
-  //START WIRE.H
+  //setup sensor
   Wire.begin();
   Wire.beginTransmission(MPU);
   Wire.write(0x6B);
   Wire.write(0);
   Wire.endTransmission(true);
   Serial.begin(9600);
-  //END WIRE.H
 
   // set LED pin to output mode
   pinMode(ledPin, OUTPUT);
@@ -70,7 +53,7 @@ void setup() {
     while (1);
   }
 
-  // Setup bluetooth
+  // setup bluetooth
   BLE.setLocalName("ArduinoIMU");
   BLE.setAdvertisedService(imuService); 
   imuService.addCharacteristic(imuCharacteristic);
@@ -83,44 +66,41 @@ void setup() {
 
 }
 
-//SENSOR DATA FUNCTIE
 void sendSensorData() {
 
 Wire.beginTransmission(MPU);
-  Wire.write(0x3B); //Pedir el registro 0x3B - corresponde al AcX
+  Wire.write(0x3B); //Request register 0x3B - corresponds to AcX
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU,6,true);   //A partir del 0x3B, se piden 6 registros
-  AcX=Wire.read()<<8|Wire.read(); //Cada valor ocupa 2 registros
+  Wire.requestFrom(MPU,6,true);   //From 0x3B, 6 registers are requested
+  AcX=Wire.read()<<8|Wire.read(); //Each value occupies 2 registers
   AcY=Wire.read()<<8|Wire.read();
   AcZ=Wire.read()<<8|Wire.read();
  
-  //Y-, X-hoeken worden berekend op basis van de waarden van de versnellingsmeter
-  //respectievelijk met de tangensformule.
+  //Y, X angles are calculated based on the accelerometer values
   Acc[1] = atan(-1*(AcX/A_R)/sqrt(pow((AcY/A_R),2) + pow((AcZ/A_R),2)))*RAD_TO_DEG;
   Acc[0] = atan((AcY/A_R)/sqrt(pow((AcX/A_R),2) + pow((AcZ/A_R),2)))*RAD_TO_DEG;
  
-  //Lees de Gyroscoop-waarden
+  //Read Gyro values
   Wire.beginTransmission(MPU);
   Wire.write(0x43);
   Wire.endTransmission(false);
-  Wire.requestFrom(MPU,6,true);   //Vanaf 0x43 worden 6 registraties aangevraagd
-  GyX=Wire.read()<<8|Wire.read(); //Elke waarde beslaat 2 registers
+  Wire.requestFrom(MPU,6,true);   //6 registrations are requested from 0x43
+  GyX=Wire.read()<<8|Wire.read(); //Each value consists of 2 registers
   GyY=Wire.read()<<8|Wire.read();
   GyZ=Wire.read()<<8|Wire.read();
  
-  // Bereken de hoek van de gyroscoop
+  // Calculate the angles of Gyro
   Gy[0] = GyX/G_R;
   Gy[1] = GyY/G_R;
   Gy[2] = GyZ/G_R;
     
-  dt = (millis() - tiempo_prev) / 1000.0;
-  tiempo_prev = millis();
+  dt = (millis() - pre_time) / 1000.0;
+  pre_time = millis();
     
-  //Pas het complementaire filter toe
   Angle[0] = 0.98 *(Angle[0]+Gy[0]*dt) + 0.02*Acc[0];
   Angle[1] = 0.98 *(Angle[1]+Gy[1]*dt) + 0.02*Acc[1]; 
 
-  //Integratie met betrekking tot tijd om de YAW te berekenen
+  //Calculate YAW
   Angle[2] = Angle[2]+Gy[2]*dt;
 
 
@@ -150,14 +130,8 @@ void loop() {
       long currentMillis = millis();
       
       if (currentMillis - previousMillis >= 50) {
-//          if (IMU.accelerationAvailable()) { // XX
-//        previousMillis = currentMillis;
           sendSensorData();
-          // delay(1000);
-                    
           Serial.println();
-
-//          }
       }
     }
     // when the central disconnects, turn off the LED:
