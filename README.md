@@ -1,5 +1,5 @@
-# ILE-Erasmus
-The ILE Erasmus app is targeted at students who are studying the anatomy of the female body. This repository contains the Ccntroller software for the Arduino MKR 1010 WiFi
+# ILE-Erasmus-Controller
+The ILE Erasmus app is targeted at students who are studying the anatomy of the female body. This repository contains the controller software for the Arduino MKR 1010 WiFi
 
 ### Installation
 - Clone the project.
@@ -7,12 +7,12 @@ The ILE Erasmus app is targeted at students who are studying the anatomy of the 
 
 ### Hardware
 
-This project uses the [Arduino MKR 1010 WiFi](https://store.arduino.cc/arduino-mkr-wifi-1010) and the MPU-6050 Gyro sensor. You can buy them directly at Arduino or any other hobby electronics shop. The Arduino supports using an external battery, but it will also work fine over USB.
+This project uses the [Arduino MKR 1010 WiFi](https://store.arduino.cc/arduino-mkr-wifi-1010) and the MPU-6050 Gyro sensor. You can buy them directly at Arduino or any other hobby electronics shops. The Arduino supports using an external battery, but it will also work fine over USB.
 
 Don't forget to update your Arduino MKR's [firmware](https://forum.arduino.cc/index.php?topic=579306.0) if needed!
 
 ## Wiring
-Connect the sensor with 2 cables to the SDL and SDA port, also connect VCC and GND to the VCC and GND ports on the Arduino.
+Connect the sensor with 2 cables to the SCL and SDA port, also connect VCC and GND to the VCC and GND ports on the Arduino.
 
 This is how your controller should look.
 ![alt text](https://github.com/ErasmusTeam3A/ILE-Erasmus-Controller/blob/master/images/IMG_3315.jpeg?raw=true)
